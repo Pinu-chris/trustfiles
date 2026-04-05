@@ -1,9 +1,7 @@
 FROM php:8.2-apache
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
-    libpq-dev \
-    unzip \
+# Install PostgreSQL extension
+RUN apt-get update && apt-get install -y libpq-dev \
     && docker-php-ext-install pdo pdo_pgsql
 
 # Enable Apache rewrite
@@ -15,10 +13,10 @@ WORKDIR /var/www/html
 # Copy project files
 COPY . /var/www/html/
 
-# Install Composer
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+# Point Apache to /public folder
+RUN sed -i 's!/var/www/html!/var/www/html/public!g' /etc/apache2/sites-available/000-default.conf
 
-RUN composer install
+# Fix permissions
+RUN chown -R www-data:www-data /var/www/html
 
-# Expose port
 EXPOSE 80
