@@ -1,0 +1,23 @@
+RewriteEngine On
+
+# Redirect assets
+RewriteRule ^assets/(.*)$ /assets/$1 [L]
+
+# Redirect API
+RewriteRule ^api/(.*)$ /api/$1 [L]
+
+# Optional: fallback to index.php (SPA style)
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^ index.php [L]
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # If file or folder exists → serve it directly
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+
+    # Otherwise route to index.php (optional)
+    RewriteRule ^ index.php [L]
+</IfModule>
