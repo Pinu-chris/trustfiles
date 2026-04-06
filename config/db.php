@@ -12,7 +12,8 @@
  */
 
 namespace TrustLink\Config;
-
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
 // Load environment configuration
 require_once __DIR__ . '/load_env.php';
 
