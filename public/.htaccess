@@ -1,24 +1,52 @@
 <IfModule mod_rewrite.c>
     RewriteEngine On
     
-    # Prevent infinite loops
+    # ============================================
+    # PREVENT INFINITE LOOPS & MALFORMED REQUESTS
+    # ============================================
     RewriteCond %{ENV:REDIRECT_STATUS} ^$
     
-    # Serve existing files directly
+    # ============================================
+    # BLOCK SENSITIVE FOLDERS
+    # ============================================
+    RewriteRule ^(config|utils|vendor|logs)/ - [F,L]
+    
+    # ============================================
+    # SERVE EXISTING FILES/FOLDERS DIRECTLY
+    # ============================================
     RewriteCond %{REQUEST_FILENAME} -f [OR]
     RewriteCond %{REQUEST_FILENAME} -d
     RewriteRule ^ - [L]
     
-    # API calls (go back to root /api folder)
-    RewriteRule ^api/(.*)$ ../api/$1 [QSA,L]
+    # ============================================
+    # API & ASSETS - NO REWRITE, JUST PASS THROUGH
+    # ============================================
+    # These folders already exist in the root
+    RewriteRule ^(api|assets)/ - [L]
     
-    # Assets (go back to root /assets folder)
-    RewriteRule ^assets/(.*)$ ../assets/$1 [QSA,L]
+    # ============================================
+    # ROOT → PUBLIC/INDEX.PHP
+    # ============================================
+    RewriteRule ^$ public/index.php [L]
     
-    # Frontend routing (remove .php extension)
+    # ============================================
+    # MAP COMMON PAGES TO PUBLIC/ FOLDER
+    # ============================================
+    RewriteRule ^(login|register|dashboard|cart|products|product-detail|my-orders|my-products|received-orders|order-detail|admin|add-product|edit-product|change-password|forgot-password|reset-password)$ public/$1.php [L]
+    
+    # ============================================
+    # FALLBACK FOR ANY .PHP FILE (e.g., test.php)
+    # ============================================
     RewriteCond %{REQUEST_FILENAME}.php -f
-    RewriteRule ^(.*?)/?$ $1.php [L]
+    RewriteRule ^(.*?)/?$ public/$1.php [L]
     
-    # Fallback to index.php
-    RewriteRule ^ index.php [L]
+    # ============================================
+    # CATCH-ALL → PUBLIC/INDEX.PHP
+    # ============================================
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^ public/index.php [L]
 </IfModule>
+
+# Disable MultiViews to avoid content negotiation issues
+Options -MultiViews
