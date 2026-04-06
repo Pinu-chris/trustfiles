@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: trustfiles
+    runtime: image
+    repo: https://github.com/Pinu-chris/trustfile
+    plan: free
+    envVars:
+      - key: PHP_VERSION
+        value: 8.2.12
+    dockerCommand: |
+      # Use Apache with PHP
+      apt-get update && apt-get install -y apache2 php libapache2-mod-php php-mysql php-pgsql php-gd php-curl php-mbstring php-xml php-zip
+      a2enmod rewrite headers expires deflate
+      service apache2 start
+      tail -f /var/log/apache2/access.log
+    buildCommand: |
+      # Copy files to Apache directory
+      cp -r . /var/www/html/
+      chown -R www-data:www-data /var/www/html
+      chmod -R 755 /var/www/html

@@ -1,23 +1,24 @@
-RewriteEngine On
-
-# Redirect assets
-RewriteRule ^assets/(.*)$ /assets/$1 [L]
-
-# Redirect API
-RewriteRule ^api/(.*)$ /api/$1 [L]
-
-# Optional: fallback to index.php (SPA style)
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule ^ index.php [L]
-
 <IfModule mod_rewrite.c>
     RewriteEngine On
-
-    # If file or folder exists → serve it directly
-    RewriteCond %{REQUEST_FILENAME} !-f
-    RewriteCond %{REQUEST_FILENAME} !-d
-
-    # Otherwise route to index.php (optional)
+    
+    # Prevent infinite loops
+    RewriteCond %{ENV:REDIRECT_STATUS} ^$
+    
+    # Serve existing files directly
+    RewriteCond %{REQUEST_FILENAME} -f [OR]
+    RewriteCond %{REQUEST_FILENAME} -d
+    RewriteRule ^ - [L]
+    
+    # API calls (go back to root /api folder)
+    RewriteRule ^api/(.*)$ ../api/$1 [QSA,L]
+    
+    # Assets (go back to root /assets folder)
+    RewriteRule ^assets/(.*)$ ../assets/$1 [QSA,L]
+    
+    # Frontend routing (remove .php extension)
+    RewriteCond %{REQUEST_FILENAME}.php -f
+    RewriteRule ^(.*?)/?$ $1.php [L]
+    
+    # Fallback to index.php
     RewriteRule ^ index.php [L]
 </IfModule>

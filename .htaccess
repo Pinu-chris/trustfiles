@@ -1,0 +1,108 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    
+    # ============================================
+    # SECURITY HEADERS (Production)
+    # ============================================
+    Header set X-Content-Type-Options "nosniff"
+    Header set X-Frame-Options "DENY"
+    Header set X-XSS-Protection "1; mode=block"
+    Header set Referrer-Policy "strict-origin-when-cross-origin"
+    
+    # ============================================
+    # PREVENT INFINITE REDIRECT LOOPS
+    # ============================================
+    RewriteCond %{ENV:REDIRECT_STATUS} ^$
+    
+    # ============================================
+    # BLOCK ACCESS TO SENSITIVE FILES
+    # ============================================
+    <FilesMatch "^\.">
+        Order allow,deny
+        Deny from all
+    </FilesMatch>
+    
+    <FilesMatch "\.(env|log|sql|ini|bak|sh|sqlite|db)$">
+        Order allow,deny
+        Deny from all
+    </FilesMatch>
+    
+    # Block access to config, utils, vendor directories
+    RewriteRule ^(config|utils|vendor|logs)/ - [F,L]
+    
+    # Block access to composer files
+    RewriteRule ^(composer\.(json|lock)|backup\.sql)$ - [F,L]
+    
+    # ============================================
+    # SERVE EXISTING FILES DIRECTLY
+    # ============================================
+    RewriteCond %{REQUEST_FILENAME} -f [OR]
+    RewriteCond %{REQUEST_FILENAME} -d
+    RewriteRule ^ - [L]
+    
+    # ============================================
+    # API ROUTING (Keep original paths)
+    # ============================================
+    # API files already exist in /api/ folder - no rewrite needed
+    # Just ensure they can be accessed directly
+    
+    # ============================================
+    # ASSETS ROUTING (No rewrite needed - direct access)
+    # ============================================
+    # Assets are in /assets/ folder - already accessible
+    
+    # ============================================
+    # FRONTEND ROUTING (public folder files)
+    # ============================================
+    # Map root requests to public/index.php
+    RewriteRule ^$ public/index.php [L]
+    
+    # Map common pages to public/ (without .php extension)
+    RewriteRule ^(login|register|dashboard|cart|products|product-detail|my-orders|my-products|received-orders|order-detail|admin|add-product|edit-product|change-password|forgot-password|reset-password)$ public/$1.php [L]
+    
+    # Map .html files to .php if needed
+    RewriteCond %{REQUEST_FILENAME}.php -f
+    RewriteRule ^(.*?)/?$ $1.php [L]
+    
+    # ============================================
+    # CATCH-ALL ROUTE (SPA-like behavior)
+    # ============================================
+    # If nothing matched, try public/index.php
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^ public/index.php [L]
+    
+</IfModule>
+
+# ============================================
+# PHP SETTINGS
+# ============================================
+<IfModule mod_php7.c>
+    php_value upload_max_filesize 50M
+    php_value post_max_size 50M
+    php_value max_execution_time 300
+    php_value memory_limit 256M
+    php_flag display_errors Off
+    php_flag log_errors On
+    php_value error_log logs/php_error.log
+</IfModule>
+
+# ============================================
+# COMPRESSION (Improve performance)
+# ============================================
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css text/javascript application/javascript application/json
+</IfModule>
+
+# ============================================
+# CACHING (Static assets)
+# ============================================
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType image/jpg "access plus 1 year"
+    ExpiresByType image/jpeg "access plus 1 year"
+    ExpiresByType image/png "access plus 1 year"
+    ExpiresByType image/webp "access plus 1 year"
+    ExpiresByType text/css "access plus 1 month"
+    ExpiresByType application/javascript "access plus 1 month"
+</IfModule>
